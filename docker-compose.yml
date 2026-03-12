@@ -1,0 +1,27 @@
+services:
+  mcp-server:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: gem-mcp-server
+    environment:
+      MCP_HOST: 0.0.0.0
+      MCP_PORT: 8000
+      MCP_PATH: /mcp
+      NGROK_API_URL: http://ngrok:4040/api/tunnels
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./outputs:/app/outputs
+      - ./data:/app/data
+
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: gem-ngrok
+    environment:
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN:-}
+    command: ["http", "mcp-server:8000"]
+    ports:
+      - "4040:4040"
+    depends_on:
+      - mcp-server
