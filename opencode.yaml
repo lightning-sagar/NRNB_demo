@@ -1,0 +1,7 @@
+tools:
+  gem-tools:
+    type: mcp
+    url: http://localhost:8000/mcp
+  gem-tools-docker:
+    type: mcp
+    url: http://gem-mcp-server:8000/mcp

@@ -8,22 +8,6 @@ This repository extends the existing genome-scale metabolic model reconstruction
 4. COBRApy FBA: model.xml -> predicted growth rate
 5. Save results: fba_result.txt
 
-## Project Layout
-
-```text
-docker-compose.yml
-docker/
-	Dockerfile
-mcp-server/
-	server.py
-	tools/
-pipeline/
-	pipeline.py
-outputs/
-data/
-pipeline.py
-```
-
 ## Installation
 
 Create an environment and install the Python dependencies:
@@ -45,19 +29,19 @@ You still need the biological command-line tools available for local non-Docker 
 Genome input:
 
 ```bash
-python pipeline.py --genome data/input/genome.fna --output-dir outputs
+python pipeline.py --genome data/input/genome.fna --output-dir data/output
 ```
 
 Protein input:
 
 ```bash
-python pipeline.py --protein data/input/protein.faa --output-dir outputs
+python pipeline.py --protein data/input/protein.faa --output-dir data/output
 ```
 
 The previous entrypoint still works:
 
 ```bash
-python src/gem_pipeline.py --genome data/input/genome.fna --output-dir outputs
+python src/gem_pipeline.py --genome data/input/genome.fna --output-dir data/output
 ```
 
 ## MCP Server Mode
@@ -83,26 +67,79 @@ http://localhost:8000/mcp
 
 ## Docker Compose Mode
 
-Provide an ngrok auth token if you want a public tunnel:
+Start the local MCP server with Docker:
 
 ```bash
-# bash
-export NGROK_AUTHTOKEN=your_token
-# PowerShell
-$env:NGROK_AUTHTOKEN="your_token"
-docker compose up --build
+docker compose up --build --remove-orphans
 ```
 
-The server container prints:
+The server exposes:
 
 - Local MCP URL
-- Public ngrok MCP URL
 
-If ngrok is not configured, the local MCP server still runs and the public URL is reported as unavailable.
+The service is also attached to Docker network `gem-tools-net` with container name `gem-mcp-server`.
 
-## Expected Outputs
+## OpenCode Agent (Easiest)
 
-- outputs/proteins.faa
-- outputs/model.xml
-- outputs/memote_report.html
-- outputs/fba_result.txt
+OpenCode reads project config from `opencode.json` (not `opencode.yaml`).
+
+Use this OpenCode configuration file:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "gem-tools": {
+      "type": "remote",
+      "url": "http://localhost:8000/mcp",
+      "enabled": true
+    },
+    "gem-tools-docker": {
+      "type": "remote",
+      "url": "http://gem-mcp-server:8000/mcp",
+      "enabled": false
+    }
+  }
+}
+```
+
+Use `gem-tools` when OpenCode runs on your host machine.
+
+If OpenCode runs in Docker on the same network, either enable `gem-tools-docker` or connect your OpenCode container to the MCP network:
+
+```bash
+docker network connect gem-tools-net <opencode_container_name>
+```
+
+You can also point to your hosted FastMCP URL if you have one:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "gem-tools": {
+      "type": "remote",
+      "url": "https://purring-amber-cat.fastmcp.app/mcp",
+      "enabled": true
+    }
+  }
+}
+```
+
+The same config is already added as `opencode.json` in this repository.
+
+## File Input Examples
+
+You can pass file paths directly when calling the MCP tools:
+
+- `run_prodigal(fna_file="data/input/genome.fna", output_dir="outputs")`
+- `run_carveme(faa_file="outputs/proteins.faa", output_dir="outputs")`
+- `run_memote(model_xml="outputs/model.xml", output_dir="outputs")`
+- `run_fba(model_xml="outputs/model.xml", output_dir="outputs")`
+
+## Expected data/output
+
+- data/output/proteins.faa
+- data/output/model.xml
+- data/output/memote_report.html
+- data/output/fba_result.txt

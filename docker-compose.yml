@@ -8,20 +8,15 @@ services:
       MCP_HOST: 0.0.0.0
       MCP_PORT: 8000
       MCP_PATH: /mcp
-      NGROK_API_URL: http://ngrok:4040/api/tunnels
     ports:
       - "8000:8000"
     volumes:
       - ./outputs:/app/outputs
       - ./data:/app/data
+    networks:
+      - gem-tools-net
 
-  ngrok:
-    image: ngrok/ngrok:latest
-    container_name: gem-ngrok
-    environment:
-      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN:-}
-    command: ["http", "mcp-server:8000"]
-    ports:
-      - "4040:4040"
-    depends_on:
-      - mcp-server
+networks:
+  gem-tools-net:
+    name: gem-tools-net
+    driver: bridge

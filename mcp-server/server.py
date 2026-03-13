@@ -1,12 +1,10 @@
-import json
 import os
 import sys
-import time
 from pathlib import Path
-from urllib.error import URLError
-from urllib.request import urlopen
 
 from fastmcp import FastMCP
+from starlette.requests import Request
+from starlette.responses import PlainTextResponse
 
 
 SERVER_DIR = Path(__file__).resolve().parent
@@ -23,11 +21,14 @@ from tools.prodigal_tool import run_prodigal_tool
 HOST = os.getenv("MCP_HOST", "0.0.0.0")
 PORT = int(os.getenv("MCP_PORT", "8000"))
 MCP_PATH = os.getenv("MCP_PATH", "/mcp")
-NGROK_API_URL = os.getenv("NGROK_API_URL", "http://ngrok:4040/api/tunnels")
-NGROK_POLL_SECONDS = int(os.getenv("NGROK_POLL_SECONDS", "30"))
 
 
 mcp = FastMCP("gem-tools")
+
+
+@mcp.custom_route("/health", methods=["GET"])
+async def health_check(_: Request) -> PlainTextResponse:
+    return PlainTextResponse("OK")
 
 
 @mcp.tool
@@ -52,28 +53,9 @@ def run_fba(model_xml: str, output_dir: str = "outputs") -> dict[str, str | floa
 
 def print_local_url():
     print(f"Local MCP URL: http://localhost:{PORT}{MCP_PATH}", flush=True)
-
-
-def print_public_url():
-    for _ in range(NGROK_POLL_SECONDS):
-        try:
-            with urlopen(NGROK_API_URL, timeout=2) as response:
-                payload = json.load(response)
-        except (URLError, TimeoutError, json.JSONDecodeError):
-            time.sleep(1)
-            continue
-
-        tunnels = payload.get("tunnels", [])
-        public_url = next((item.get("public_url") for item in tunnels if item.get("public_url")), None)
-        if public_url:
-            print(f"Public ngrok MCP URL: {public_url}{MCP_PATH}", flush=True)
-            return
-        time.sleep(1)
-
-    print("Public ngrok MCP URL: unavailable", flush=True)
+    print(f"Health URL: http://localhost:{PORT}/health", flush=True)
 
 
 if __name__ == "__main__":
     print_local_url()
-    print_public_url()
     mcp.run(transport="http", host=HOST, port=PORT)

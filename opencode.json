@@ -1,0 +1,15 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "gem-tools": {
+      "type": "remote",
+      "url": "http://localhost:8000/mcp",
+      "enabled": true
+    },
+    "gem-tools-docker": {
+      "type": "remote",
+      "url": "http://gem-mcp-server:8000/mcp",
+      "enabled": false
+    }
+  }
+}
