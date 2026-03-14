@@ -34,7 +34,7 @@ def build_output_paths(output_dir: Path) -> PipelineOutputs:
         proteins_faa=output_dir / "proteins.faa",
         model_xml=output_dir / "model.xml",
         memote_report_html=output_dir / "memote_report.html",
-        fba_result_txt=output_dir / "fba_result.json",
+        fba_result_txt=output_dir / "fba_result.txt",
     )
 
 

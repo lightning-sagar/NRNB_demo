@@ -12,7 +12,7 @@ PROJECT_ROOT = SERVER_DIR.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from tools.carveme_tool import run_carveme_tool
+from tools.carveme_tool import get_carveme_status_tool, run_carveme_tool
 from tools.cobra_tool import run_fba_tool
 from tools.memote_tool import run_memote_tool
 from tools.prodigal_tool import run_prodigal_tool
@@ -32,22 +32,27 @@ async def health_check(_: Request) -> PlainTextResponse:
 
 
 @mcp.tool
-def run_prodigal(fna_file: str, output_dir: str = "outputs") -> dict[str, str]:
+def run_prodigal(fna_file: str, output_dir: str = "data/output") -> dict[str, str]:
     return run_prodigal_tool(fna_file=fna_file, output_dir=output_dir)
 
 
 @mcp.tool
-def run_carveme(faa_file: str, output_dir: str = "outputs") -> dict[str, str]:
+def run_carveme(faa_file: str, output_dir: str = "data/output") -> dict[str, str]:
     return run_carveme_tool(faa_file=faa_file, output_dir=output_dir)
 
 
 @mcp.tool
-def run_memote(model_xml: str, output_dir: str = "outputs") -> dict[str, str]:
+def get_carveme_status(job_id: str) -> dict[str, str]:
+    return get_carveme_status_tool(job_id=job_id)
+
+
+@mcp.tool
+def run_memote(model_xml: str, output_dir: str = "data/output") -> dict[str, str]:
     return run_memote_tool(model_xml=model_xml, output_dir=output_dir)
 
 
 @mcp.tool
-def run_fba(model_xml: str, output_dir: str = "outputs") -> dict[str, str | float]:
+def run_fba(model_xml: str, output_dir: str = "data/output") -> dict[str, str | float]:
     return run_fba_tool(model_xml=model_xml, output_dir=output_dir)
 
 
