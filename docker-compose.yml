@@ -1,4 +1,17 @@
 services:
+  neo4j:
+    image: neo4j:5
+    container_name: gem-neo4j
+    environment:
+      NEO4J_AUTH: neo4j/password
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    volumes:
+      - neo4j-data:/data
+    networks:
+      - gem-tools-net
+
   mcp-server:
     build:
       context: .
@@ -13,6 +26,31 @@ services:
     volumes:
       - ./outputs:/app/outputs
       - ./data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    networks:
+      - gem-tools-net
+
+  opencode:
+    image: ghcr.io/anomalyco/opencode:latest
+    container_name: gem-opencode
+    depends_on:
+      mcp-server:
+        condition: service_healthy
+    environment:
+      GOOGLE_GENERATIVE_AI_API_KEY: ${GOOGLE_GENERATIVE_AI_API_KEY}
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+      - ./docker/opencode-entrypoint.sh:/usr/local/bin/opencode-entrypoint.sh:ro
+      - opencode-data:/root/.local/share/opencode
+    entrypoint: ["/bin/sh", "/usr/local/bin/opencode-entrypoint.sh"]
+    stdin_open: true
+    tty: true
     networks:
       - gem-tools-net
 
@@ -20,3 +58,7 @@ networks:
   gem-tools-net:
     name: gem-tools-net
     driver: bridge
+
+volumes:
+  neo4j-data:
+  opencode-data:

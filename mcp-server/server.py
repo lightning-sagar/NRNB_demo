@@ -32,6 +32,17 @@ async def health_check(_: Request) -> PlainTextResponse:
 
 
 @mcp.tool
+def ping() -> dict[str, str]:
+    """Check whether the GEM MCP server is reachable and responding."""
+    return {
+        "status": "ok",
+        "server": "gem-tools",
+        "mcp_path": MCP_PATH,
+        "health_url": f"http://localhost:{PORT}/health",
+    }
+
+
+@mcp.tool
 def run_prodigal(fna_file: str, output_dir: str = "data/output") -> dict[str, str]:
     return run_prodigal_tool(fna_file=fna_file, output_dir=output_dir)
 

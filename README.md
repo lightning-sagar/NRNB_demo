@@ -1,6 +1,12 @@
 # GEM Tools Prototype
 
-This repository extends the existing genome-scale metabolic model reconstruction prototype into a reusable pipeline module plus a FastMCP server. The biological workflow is unchanged:
+This repository packages a draft genome-scale metabolic model reconstruction workflow as:
+
+- a FastMCP server for executable tooling
+- an OpenCode workspace with a discoverable skill at `.opencode/skills/gem-workflow/SKILL.md`
+- a Docker Compose stack that starts the dependencies together
+
+The biological workflow is unchanged:
 
 1. Prodigal: genome.fna -> proteins.faa
 2. CarveMe: proteins.faa -> model.xml
@@ -67,49 +73,70 @@ http://localhost:8000/mcp
 
 ## Docker Compose Mode
 
-Start the local MCP server with Docker:
+Copy `.env.example` to `.env` and set your Gemini API key:
+
+```env
+GOOGLE_GENERATIVE_AI_API_KEY=your_gemini_api_key_here
+NEO4J_AUTH=neo4j/password
+```
+
+Then start the full workspace:
 
 ```bash
 docker compose up --build --remove-orphans
 ```
 
-The server exposes:
+For the normal interactive OpenCode experience, do not use `-d`. OpenCode is a terminal UI, so it should stay attached to your terminal.
 
-- Local MCP URL
+If you already started it detached, attach to the running CLI container with:
 
-The service is also attached to Docker network `gem-tools-net` with container name `gem-mcp-server`.
+```bash
+docker attach gem-opencode
+```
+
+What this now does:
+
+- starts Neo4j
+- starts the FastMCP server on `http://localhost:8000/mcp`
+- waits for the MCP server to become healthy
+- opens the OpenCode CLI inside the `opencode` container
+- makes the repo-local OpenCode skill available in the mounted workspace
+
+Container-to-container endpoints:
+
+- MCP: `http://gem-mcp-server:8000/mcp`
+- Neo4j: `bolt://gem-neo4j:7687`
+
+Host endpoints:
+
+- MCP: `http://localhost:8000/mcp`
+- Neo4j Browser: `http://localhost:7474`
 
 ## OpenCode Agent (Easiest)
 
-OpenCode reads project config from `opencode.json` (not `opencode.yaml`).
+OpenCode reads project config from `opencode.json` in the workspace root.
 
-Use this OpenCode configuration file:
+Inside Docker Compose, the config enables the in-network MCP endpoint by default:
 
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
   "mcp": {
-    "gem-tools": {
-      "type": "remote",
-      "url": "http://localhost:8000/mcp",
-      "enabled": true
-    },
     "gem-tools-docker": {
       "type": "remote",
       "url": "http://gem-mcp-server:8000/mcp",
+      "enabled": true
+    },
+    "gem-tools": {
+      "type": "remote",
+      "url": "http://localhost:8000/mcp",
       "enabled": false
     }
   }
 }
 ```
 
-Use `gem-tools` when OpenCode runs on your host machine.
-
-If OpenCode runs in Docker on the same network, either enable `gem-tools-docker` or connect your OpenCode container to the MCP network:
-
-```bash
-docker network connect gem-tools-net <opencode_container_name>
-```
+If you want to run OpenCode on your host instead of in Docker, flip the `enabled` flags so `gem-tools` is enabled and `gem-tools-docker` is disabled.
 
 You can also point to your hosted FastMCP URL if you have one:
 
@@ -126,7 +153,33 @@ You can also point to your hosted FastMCP URL if you have one:
 }
 ```
 
-The same config is already added as `opencode.json` in this repository.
+The same config is already included as `opencode.json` in this repository.
+
+To use Gemini instead of OpenAI billing, start OpenCode and run:
+
+```text
+/connect
+```
+
+Then select the Google provider, paste your Gemini API key if prompted, and choose a Gemini model with:
+
+```text
+/models
+```
+
+The `opencode` container now persists auth data in a Docker volume, so your provider login survives container restarts.
+
+## Workspace Skill
+
+The repo now includes a discoverable OpenCode skill at `.opencode/skills/gem-workflow/SKILL.md`, which gives the agent a project-specific workflow for:
+
+- CarveMe
+- COBRApy
+- MEMOTE
+- refineGEMs integration planning
+- Cytoscape integration planning
+
+This means the agent starts with both executable MCP tools and local workflow guidance when launched through Docker Compose.
 
 ## File Input Examples
 
