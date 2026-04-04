@@ -2,3 +2,5 @@ cobra>=0.29.0
 memote>=0.17.0
 carveme
 fastmcp
+fastapi>=0.115.0
+uvicorn>=0.30.0

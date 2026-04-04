@@ -1,8 +1,9 @@
 import argparse
-import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 import cobra   
+
+from pipeline.common import run_command
 
 DEFAULT_OUTPUT_DIR = Path("data/output")
 
@@ -13,15 +14,6 @@ class PipelineOutputs:
     model_xml: Path
     memote_report_html: Path
     fba_result_txt: Path
-
-
-def run_command(cmd: list[str], step_name: str):
-    print(f"[{step_name}] Running: {' '.join(cmd)}")
-    try:
-        subprocess.run(cmd, check=True)
-    except subprocess.CalledProcessError as exc:
-        raise RuntimeError(f"{step_name} failed with exit code {exc.returncode}") from exc
-
 
 def ensure_output_dir(output_dir: Path):
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -39,14 +31,35 @@ def build_output_paths(output_dir: Path) -> PipelineOutputs:
 
 
 def run_prodigal(genome_fna: Path, proteins_faa: Path):
-    cmd = ["prodigal", "-i", str(genome_fna), "-a", str(proteins_faa), "-p", "single", "-q"]
-    run_command(cmd, "Prodigal")
+    attempts = [
+        ("single", ["prodigal", "-i", str(genome_fna), "-a", str(proteins_faa), "-p", "single", "-q"]),
+        ("meta", ["prodigal", "-i", str(genome_fna), "-a", str(proteins_faa), "-p", "meta", "-q"]),
+    ]
+    errors: list[str] = []
+    for mode, cmd in attempts:
+        try:
+            run_command(cmd, f"Prodigal ({mode})")
+            if proteins_faa.exists() and proteins_faa.stat().st_size > 0:
+                return proteins_faa
+            errors.append(f"{mode} mode completed without producing a non-empty FAA file.")
+        except RuntimeError as exc:
+            errors.append(f"{mode} mode error: {exc}")
+    raise RuntimeError(
+        "Prodigal failed to generate proteins.faa. "
+        "This can happen with tiny or fragmented genomes.\n"
+        + "\n".join(errors)
+    )
     return proteins_faa
 
 
 def run_carveme(proteins_faa: Path, model_xml: Path):
     cmd = ["carve", str(proteins_faa), "-o", str(model_xml)]
     run_command(cmd, "CarveMe")
+    if not model_xml.exists() or model_xml.stat().st_size == 0:
+        raise RuntimeError(
+            "CarveMe finished without producing a non-empty SBML model at "
+            f"'{model_xml}'. Ensure DIAMOND is installed and inspect the command output above."
+        )
     return model_xml
 
 

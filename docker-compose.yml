@@ -4,10 +4,8 @@ services:
       context: .
       dockerfile: docker/Dockerfile
     container_name: gem-mcp-server
-    environment:
-      MCP_HOST: 0.0.0.0
-      MCP_PORT: 8000
-      MCP_PATH: /mcp
+    env_file:
+      - .env
     ports:
       - "8000:8000"
     volumes:
@@ -15,8 +13,42 @@ services:
       - ./data:/app/data
     networks:
       - gem-tools-net
+    depends_on:
+      - neo4j
+  cli-agent:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: gem-cli-agent
+    command: ["python", "-m", "apps.agent_api"]
+    env_file:
+      - .env
+    ports:
+      - "9000:9000"
+    volumes:
+      - ./outputs:/app/outputs
+      - ./data:/app/data
+    networks:
+      - gem-tools-net
+    depends_on:
+      - mcp-server
+  neo4j:
+    image: neo4j:5
+    container_name: gem-neo4j
+    environment:
+      NEO4J_AUTH: ${NEO4J_AUTH:-neo4j/password123}
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    volumes:
+      - neo4j_data:/data
+    networks:
+      - gem-tools-net
 
 networks:
   gem-tools-net:
     name: gem-tools-net
     driver: bridge
+
+volumes:
+  neo4j_data:

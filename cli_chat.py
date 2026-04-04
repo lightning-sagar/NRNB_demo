@@ -1,4 +1,4 @@
-from pipeline.pipeline import main
+from apps.cli_chat import main
 
 
 if __name__ == "__main__":

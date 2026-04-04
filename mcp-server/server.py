@@ -9,13 +9,17 @@ from starlette.responses import PlainTextResponse
 
 SERVER_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SERVER_DIR.parent
+if str(SERVER_DIR) not in sys.path:
+    sys.path.insert(0, str(SERVER_DIR))
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from tools.carveme_tool import get_carveme_status_tool, run_carveme_tool
 from tools.cobra_tool import run_fba_tool
+from tools.cytoscape_tool import prepare_cytoscape_export_tool
 from tools.memote_tool import run_memote_tool
 from tools.prodigal_tool import run_prodigal_tool
+from tools.refinegems_tool import prepare_refinegems_handoff_tool
 
 
 HOST = os.getenv("MCP_HOST", "0.0.0.0")
@@ -54,6 +58,28 @@ def run_memote(model_xml: str, output_dir: str = "data/output") -> dict[str, str
 @mcp.tool
 def run_fba(model_xml: str, output_dir: str = "data/output") -> dict[str, str | float]:
     return run_fba_tool(model_xml=model_xml, output_dir=output_dir)
+
+
+@mcp.tool
+def prepare_refinegems_handoff(
+    model_xml: str,
+    output_dir: str = "data/output",
+    memote_report_html: str = "",
+    fba_result_txt: str = "",
+) -> dict[str, str]:
+    return prepare_refinegems_handoff_tool(
+        model_xml=model_xml,
+        output_dir=output_dir,
+        memote_report_html=memote_report_html or None,
+        fba_result_txt=fba_result_txt or None,
+    )
+
+
+@mcp.tool
+def prepare_cytoscape_export(
+    model_xml: str, output_dir: str = "data/output"
+) -> dict[str, str | int]:
+    return prepare_cytoscape_export_tool(model_xml=model_xml, output_dir=output_dir)
 
 
 def print_local_url():

@@ -17,12 +17,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt ./requirements.txt
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
+COPY apps ./apps
+COPY agent ./agent
 COPY pipeline/pipeline.py ./pipeline/pipeline.py
+COPY pipeline/common.py ./pipeline/common.py
 COPY src ./src
 COPY mcp-server ./mcp-server
 COPY docker ./docker
 COPY data ./data
+COPY cli_chat.py ./cli_chat.py
+COPY opencode_agent.py ./opencode_agent.py
 
 RUN mkdir -p /app/outputs
 
-CMD ["python", "mcp-server/server.py"]
+CMD ["python", "-m", "apps.mcp_server"]
