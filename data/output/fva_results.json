@@ -1,0 +1,15 @@
+{
+  "fraction_of_optimum": 0.9,
+  "results": [
+    {
+      "reaction_id": "EX_glc__D_e",
+      "minimum_flux": -1000.0,
+      "maximum_flux": 1000.0
+    },
+    {
+      "reaction_id": "Growth",
+      "minimum_flux": 127.91041325203054,
+      "maximum_flux": 142.1226813911453
+    }
+  ]
+}

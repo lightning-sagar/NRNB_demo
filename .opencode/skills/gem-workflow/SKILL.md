@@ -20,7 +20,7 @@ metadata:
 Use this skill when working on:
 
 - `Prodigal -> CarveMe -> MEMOTE -> FBA` workflows
-- interpretation of `data/output/model.xml`, MEMOTE results, or FBA output
+- interpretation of `data/output/model.xml`, MEMOTE results, FBA output, FVA ranges, or knockout simulations
 - deciding the next validation step for a draft GEM
 
 ## Primary workflow
@@ -30,9 +30,13 @@ Use this skill when working on:
    - `ping()`
    - `run_prodigal(fna_file, output_dir)`
    - `run_carveme(faa_file, output_dir)`
-   - `get_carveme_status(job_id)`
-   - `run_memote(model_xml, output_dir)`
-   - `run_fba(model_xml, output_dir)`
+  - `get_carveme_status(job_id)`
+  - `run_memote(model_xml, output_dir)`
+  - `run_fba(model_xml, output_dir)`
+  - `inspect_model_stats(model_xml, output_dir)`
+  - `query_reaction(model_xml, reaction_id, output_dir)`
+  - `run_fva(model_xml, reaction_ids, output_dir, fraction_of_optimum)`
+  - `simulate_gene_knockout(model_xml, gene_ids, output_dir)`
 3. Store generated artifacts under `data/output` unless the user asks for a different location.
 4. Explain each result in biological terms: what the tool does, what files it produced, and what the user should inspect next.
 
@@ -48,8 +52,13 @@ Use this skill when working on:
 ### COBRApy
 
 - Purpose: inspect and simulate the reconstructed model.
-- In this workspace, `run_fba` performs a simple flux balance analysis on an SBML model.
-- Report the objective value clearly and mention that growth predictions depend on the chosen medium and objective formulation.
+- In this workspace:
+  - `inspect_model_stats` summarizes model size, compartment coverage, and objective metadata.
+  - `query_reaction` explains one reaction's equation, bounds, subsystem, and GPR.
+  - `run_fba` performs a simple flux balance analysis on an SBML model.
+  - `run_fva` estimates feasible flux ranges for selected reactions.
+  - `simulate_gene_knockout` estimates growth effects for selected gene deletions.
+- Report objective values clearly and mention that growth predictions, FVA ranges, and knockout effects depend on the chosen medium and objective formulation.
 
 ### MEMOTE
 
@@ -94,6 +103,11 @@ Use this skill when working on:
   - else ask the user to provide the correct path
 - If the user asks for FBA on an existing SBML model and MCP is unavailable, run the local pipeline function directly:
   - `python -c "from pathlib import Path; from pipeline.pipeline import run_fba, save_fba_result; model_path = Path('data/output/model.xml') if Path('data/output/model.xml').exists() else Path('data/input/model.xml'); growth_rate = run_fba(model_path); print(f'Growth rate: {growth_rate:.6f}'); save_fba_result(growth_rate, Path('data/output/fba_result.txt'))"`
+- If MCP is unavailable for inspection-oriented COBRApy analysis, use local functions from `pipeline.pipeline`:
+  - `inspect_model_statistics`
+  - `query_reaction_details`
+  - `run_fva`
+  - `simulate_gene_knockout_effects`
 - Do not start fallback by exploring unrelated files or importing from `mcp-server/tools/*` directly when `pipeline.pipeline` already exposes the supported local functions.
 - If outputs already exist, interpret files under `data/output` directly instead of blocking on MCP recovery.
 - When execution is blocked, provide the next biological validation steps rather than pretending the run succeeded.

@@ -1,0 +1,19 @@
+{
+  "model_id": "model",
+  "model_name": null,
+  "num_reactions": 2887,
+  "num_metabolites": 1822,
+  "num_genes": 1670,
+  "num_compartments": 3,
+  "compartments": {
+    "C_c": "cytosol",
+    "C_e": "extracellular space",
+    "C_p": "periplasm"
+  },
+  "num_boundary_reactions": 420,
+  "num_exchange_reactions": 413,
+  "num_demand_reactions": 0,
+  "num_sink_reactions": 7,
+  "objective_direction": "max",
+  "objective_expression": "1.0*Growth - 1.0*Growth_reverse_699ae"
+}

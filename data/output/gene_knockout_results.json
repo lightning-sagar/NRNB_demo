@@ -1,0 +1,13 @@
+{
+  "baseline_growth": 142.12268139114502,
+  "knockout_results": [
+    {
+      "gene_ids": [
+        "NC_000913_3_1352"
+      ],
+      "status": "optimal",
+      "growth": 142.12268139114522,
+      "relative_growth": 1.0000000000000013
+    }
+  ]
+}

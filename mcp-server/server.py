@@ -13,7 +13,13 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from tools.carveme_tool import get_carveme_status_tool, run_carveme_tool
-from tools.cobra_tool import run_fba_tool
+from tools.cobra_tool import (
+    inspect_model_statistics_tool,
+    query_reaction_details_tool,
+    run_fba_tool,
+    run_fva_tool,
+    simulate_gene_knockout_effects_tool,
+)
 from tools.memote_tool import run_memote_tool
 from tools.prodigal_tool import run_prodigal_tool
 
@@ -65,6 +71,48 @@ def run_memote(model_xml: str, output_dir: str = "data/output") -> dict[str, str
 @mcp.tool
 def run_fba(model_xml: str, output_dir: str = "data/output") -> dict[str, str | float]:
     return run_fba_tool(model_xml=model_xml, output_dir=output_dir)
+
+
+@mcp.tool
+def inspect_model_stats(model_xml: str, output_dir: str = "data/output") -> dict[str, object]:
+    return inspect_model_statistics_tool(model_xml=model_xml, output_dir=output_dir)
+
+
+@mcp.tool
+def query_reaction(model_xml: str, reaction_id: str, output_dir: str = "data/output") -> dict[str, object]:
+    return query_reaction_details_tool(
+        model_xml=model_xml,
+        reaction_id=reaction_id,
+        output_dir=output_dir,
+    )
+
+
+@mcp.tool
+def run_fva(
+    model_xml: str,
+    reaction_ids: list[str],
+    output_dir: str = "data/output",
+    fraction_of_optimum: float = 1.0,
+) -> dict[str, object]:
+    return run_fva_tool(
+        model_xml=model_xml,
+        reaction_ids=reaction_ids,
+        output_dir=output_dir,
+        fraction_of_optimum=fraction_of_optimum,
+    )
+
+
+@mcp.tool
+def simulate_gene_knockout(
+    model_xml: str,
+    gene_ids: list[str],
+    output_dir: str = "data/output",
+) -> dict[str, object]:
+    return simulate_gene_knockout_effects_tool(
+        model_xml=model_xml,
+        gene_ids=gene_ids,
+        output_dir=output_dir,
+    )
 
 
 def print_local_url():

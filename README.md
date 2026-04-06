@@ -58,6 +58,10 @@ The FastMCP server exposes these tools:
 - run_carveme(faa_file)
 - run_memote(model_xml)
 - run_fba(model_xml)
+- inspect_model_stats(model_xml)
+- query_reaction(model_xml, reaction_id)
+- run_fva(model_xml, reaction_ids)
+- simulate_gene_knockout(model_xml, gene_ids)
 
 Run the server directly:
 
@@ -189,6 +193,10 @@ You can pass file paths directly when calling the MCP tools:
 - `run_carveme(faa_file="outputs/proteins.faa", output_dir="outputs")`
 - `run_memote(model_xml="outputs/model.xml", output_dir="outputs")`
 - `run_fba(model_xml="outputs/model.xml", output_dir="outputs")`
+- `inspect_model_stats(model_xml="outputs/model.xml", output_dir="outputs")`
+- `query_reaction(model_xml="outputs/model.xml", reaction_id="BIOMASS_Ec_iML1515_core_75p37M", output_dir="outputs")`
+- `run_fva(model_xml="outputs/model.xml", reaction_ids=["EX_glc__D_e", "ATPM"], output_dir="outputs")`
+- `simulate_gene_knockout(model_xml="outputs/model.xml", gene_ids=["b1779"], output_dir="outputs")`
 
 ## Expected data/output
 
@@ -196,3 +204,7 @@ You can pass file paths directly when calling the MCP tools:
 - data/output/model.xml
 - data/output/memote_report.html
 - data/output/fba_result.txt
+- data/output/model_statistics.json
+- data/output/reaction_<reaction_id>_details.json
+- data/output/fva_results.json
+- data/output/gene_knockout_results.json
