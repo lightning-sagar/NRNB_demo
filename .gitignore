@@ -6,3 +6,8 @@ diamond*
 psutil*
 __pycache__*
 .env
+.venv/
+data/
+.vscode/
+.cache/
+.refinegems-cache/

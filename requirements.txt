@@ -1,4 +1,6 @@
-cobra>=0.29.0
-memote>=0.17.0
+cobra==0.26.3
+pytest==7.4.0
 carveme
 fastmcp
+masschargecuration @ git+https://github.com/Biomathsys/MassChargeCuration
+refinegems

@@ -32,6 +32,11 @@ Use this skill when working on:
    - `run_carveme(faa_file, output_dir)`
   - `get_carveme_status(job_id)`
   - `run_memote(model_xml, output_dir)`
+  - `get_memote_status(job_id)`
+  - `run_refinegems_polish(model_xml, output_dir, email, id_db, protein_fasta, lab_strain)`
+  - `refine_biomass(model_xml, output_dir)`
+  - `refine_charges(model_xml, output_dir)`
+  - `get_refinegems_status(job_id)`
   - `run_fba(model_xml, output_dir)`
   - `inspect_model_stats(model_xml, output_dir)`
   - `query_reaction(model_xml, reaction_id, output_dir)`
@@ -64,13 +69,18 @@ Use this skill when working on:
 
 - Purpose: model quality assessment.
 - Use `run_memote` after reconstruction or after any substantial model refinement.
+- `run_memote` starts a background job. Call `get_memote_status(job_id)` before reading the report or claiming completion.
 - Summarize the report rather than dumping raw output. Highlight blocked reactions, annotation gaps, stoichiometric issues, and namespace consistency.
 
 ### refineGEMs
 
 - Purpose: downstream curation and annotation refinement.
-- Current status in this repo: documented workflow target, not yet exposed as an MCP tool.
-- If a user asks for refineGEMs-specific work, explain that the next implementation step is to add either a dedicated MCP wrapper or a containerized helper command.
+- Current status in this repo: exposed as MCP tools and optional pipeline flags.
+- Use `run_refinegems_polish` after CarveMe to polish annotations and SBML metadata.
+- Use `refine_biomass` before FBA/MEMOTE when biomass coefficients need normalisation.
+- Use `refine_charges` before MEMOTE when missing metabolite charges or charge-related quality issues are expected.
+- These tools run as background jobs. Always call `get_refinegems_status(job_id)` before claiming completion or using the refined output.
+- The wrappers call refineGEMs Python functions directly, not refineGEMs CLI commands.
 
 ### Cytoscape
 
