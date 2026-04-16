@@ -23,9 +23,22 @@ def _ensure_refinegems_runtime_env() -> None:
 
 _ensure_refinegems_runtime_env()
 
-from refinegems.biomass import check_normalise_biomass
-from refinegems.charges import correct_charges_modelseed
-from refinegems.polish import polish as refinegems_polish
+_REFINEGEMS_IMPORT_ERROR: Exception | None = None
+try:
+    from refinegems.biomass import check_normalise_biomass
+    from refinegems.charges import correct_charges_modelseed
+    from refinegems.polish import polish as refinegems_polish
+except Exception as exc:
+    _REFINEGEMS_IMPORT_ERROR = exc
+
+
+def _require_refinegems() -> None:
+    if _REFINEGEMS_IMPORT_ERROR is None:
+        return
+    raise RuntimeError(
+        "refineGEMs dependencies are not installed in this runtime. "
+        "Install a refine-specific environment to use polish/biomass/charges tools."
+    ) from _REFINEGEMS_IMPORT_ERROR
 
 
 @dataclass
@@ -128,6 +141,7 @@ def run_refinegems_polish(
     lab_strain: bool = False,
     report_prefix: Path | None = None,
 ) -> Path:
+    _require_refinegems()
     print("[refineGEMs] Polishing SBML model")
     model_xml = model_xml.resolve()
     output_xml = output_xml.resolve()
@@ -151,6 +165,7 @@ def run_refinegems_polish(
 
 
 def refine_biomass(model_xml: Path, output_xml: Path) -> Path:
+    _require_refinegems()
     print("[refineGEMs] Normalising biomass reactions")
     model_xml = model_xml.resolve()
     output_xml = output_xml.resolve()
@@ -182,6 +197,7 @@ def refine_charges(
     output_xml: Path,
     multiple_charge_options_json: Path | None = None,
 ) -> dict[str, object]:
+    _require_refinegems()
     print("[refineGEMs] Correcting missing metabolite charges")
     model_xml = model_xml.resolve()
     output_xml = output_xml.resolve()
