@@ -1,4 +1,0 @@
-# Optional refineGEMs stack. This conflicts with FastMCP's modern pydantic requirements.
-cobra==0.22.0
-refinegems==1.2.2
-masschargecuration @ git+https://github.com/Biomathsys/MassChargeCuration@154493720134fb2dca03789739f890d19a06cf6e

@@ -1,3 +1,6 @@
-cobra==0.31.1
-carveme==1.6.6
+cobra==0.27.0
+refinegems==1.5.0
 fastmcp==3.2.4
+carveme==1.5.2
+masschargecuration @ git+https://github.com/Biomathsys/MassChargeCuration@1bd8a075fecaf928144b2444ef5caabe38802438
+bofdat @ git+https://github.com/draeger-lab/BOFdat@829bbcf8446e1420a6404e18a2ad197456c0e8a8
