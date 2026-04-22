@@ -9,6 +9,7 @@ This repository packages a draft genome-scale metabolic model reconstruction wor
 The biological workflow is:
 
 1. Prodigal: genome.fna -> proteins.faa
+  - plus refineGEMs-ready `proteins_refinegems.faa` (NCBI-style headers)
 2. CarveMe: proteins.faa -> model.xml
 3. Optional refineGEMs curation: polish annotations, normalise biomass, fill missing charges
 4. MEMOTE: model.xml -> memote_report.html
@@ -215,10 +216,11 @@ This means the agent starts with both executable MCP tools and local workflow gu
 You can pass file paths directly when calling the MCP tools:
 
 - `run_prodigal(fna_file="data/input/genome.fna", output_dir="outputs")`
+- `run_prodigal(fna_file="data/input/genome.fna", output_dir="outputs", annotation_tsv="outputs/protein_annotations.tsv", default_organism="Bacillus sp.")`
 - `run_carveme(faa_file="outputs/proteins.faa", output_dir="outputs")`
 - `run_memote(model_xml="outputs/model.xml", output_dir="outputs")`
 - `get_memote_status(job_id="<returned job id>")`
-- `run_refinegems_polish(model_xml="outputs/model.xml", output_dir="outputs", email="you@example.org", id_db="BIGG", protein_fasta="outputs/proteins.faa")`
+- `run_refinegems_polish(model_xml="outputs/model.xml", output_dir="outputs", email="you@example.org", id_db="BIGG", protein_fasta="outputs/proteins.faa", protein_annotation_tsv="outputs/protein_annotations.tsv", default_organism="Bacillus sp.")`
 - `refine_biomass(model_xml="outputs/model_refinegems_polished.xml", output_dir="outputs")`
 - `refine_charges(model_xml="outputs/model_refinegems_biomass.xml", output_dir="outputs")`
 - `get_refinegems_status(job_id="<returned job id>")`
@@ -231,6 +233,7 @@ You can pass file paths directly when calling the MCP tools:
 ## Expected data/output
 
 - data/output/proteins.faa
+- data/output/proteins_refinegems.faa
 - data/output/model.xml
 - data/output/model_refinegems_polished.xml
 - data/output/model_refinegems_biomass.xml
@@ -242,6 +245,22 @@ You can pass file paths directly when calling the MCP tools:
 - data/output/reaction_<reaction_id>_details.json
 - data/output/fva_results.json
 - data/output/gene_knockout_results.json
+
+## Protein annotation input format
+
+Optional annotation files for `run_prodigal` and `run_refinegems_polish` should be UTF-8 TSV with at least two columns:
+
+```text
+query_id\tproduct_name\torganism_name(optional)
+1_1\tDNA polymerase III subunit beta\tBacillus sp.
+1_2\tABC transporter ATP-binding protein\tBacillus sp.
+```
+
+This lets you project BLAST/eggNOG/InterPro-style functional calls into NCBI-like FASTA headers such as:
+
+```text
+>prot_000001 DNA polymerase III subunit beta [Bacillus sp.]
+```
 
 ## Citation
 

@@ -1,6 +1,8 @@
 import argparse
 import json
 import os
+import shutil
+import re
 import subprocess
 from dataclasses import dataclass
 from math import isnan
@@ -44,6 +46,7 @@ def _require_refinegems() -> None:
 @dataclass
 class PipelineOutputs:
     proteins_faa: Path
+    proteins_refinegems_faa: Path
     model_xml: Path
     polished_model_xml: Path
     biomass_refined_model_xml: Path
@@ -70,6 +73,7 @@ def build_output_paths(output_dir: Path) -> PipelineOutputs:
     output_dir = ensure_output_dir(output_dir)
     return PipelineOutputs(
         proteins_faa=output_dir / "proteins.faa",
+        proteins_refinegems_faa=output_dir / "proteins_refinegems.faa",
         model_xml=output_dir / "model.xml",
         polished_model_xml=output_dir / "model_refinegems_polished.xml",
         biomass_refined_model_xml=output_dir / "model_refinegems_biomass.xml",
@@ -84,6 +88,105 @@ def run_prodigal(genome_fna: Path, proteins_faa: Path):
     cmd = ["prodigal", "-i", str(genome_fna), "-a", str(proteins_faa), "-p", "single", "-q"]
     run_command(cmd, "Prodigal")
     return proteins_faa
+
+
+def _load_function_annotations(
+    annotation_tsv: Path | None,
+) -> dict[str, tuple[str, str | None]]:
+    if annotation_tsv is None:
+        return {}
+    annotations: dict[str, tuple[str, str | None]] = {}
+    with annotation_tsv.open("r", encoding="utf-8", errors="replace") as handle:
+        for raw_line in handle:
+            line = raw_line.strip()
+            if not line or line.startswith("#"):
+                continue
+            parts = [part.strip() for part in line.split("\t")]
+            if len(parts) < 2:
+                continue
+            if parts[0].lower() in {"query", "query_id", "id", "protein_id"}:
+                continue
+            protein_id = parts[0]
+            product = parts[1]
+            organism = parts[2] if len(parts) > 2 and parts[2] else None
+            if protein_id and product:
+                annotations[protein_id] = (product, organism)
+    return annotations
+
+
+def _sanitize_header_field(text: str) -> str:
+    cleaned = re.sub(r"[\r\n\[\]]+", " ", text).strip()
+    cleaned = re.sub(r"\s+", " ", cleaned)
+    return cleaned
+
+
+def _is_ncbi_style_header(header_without_gt: str) -> bool:
+    return bool(re.match(r"^\S+\s+.+\s+\[[^\[\]]+\]$", header_without_gt.strip()))
+
+
+def prepare_protein_fasta_for_refinegems(
+    input_faa: Path,
+    output_faa: Path,
+    *,
+    annotation_tsv: Path | None = None,
+    default_organism: str = "Bacteria sp.",
+) -> dict[str, int | str]:
+    """
+    Convert Prodigal-style FAA headers into NCBI-like headers expected by refineGEMs.
+
+    Optional annotation TSV format:
+    query_id<TAB>product_name<TAB>organism_name(optional)
+    """
+    output_faa.parent.mkdir(parents=True, exist_ok=True)
+    annotations = _load_function_annotations(annotation_tsv)
+
+    first_header = ""
+    with input_faa.open("r", encoding="utf-8", errors="replace") as handle:
+        for line in handle:
+            if line.startswith(">"):
+                first_header = line[1:].strip()
+                break
+
+    if first_header and _is_ncbi_style_header(first_header):
+        if input_faa.resolve() != output_faa.resolve():
+            shutil.copyfile(input_faa, output_faa)
+        return {
+            "input_headers": 0,
+            "rewritten_headers": 0,
+            "annotation_hits": 0,
+            "status": "already_ncbi_style",
+        }
+
+    default_organism = _sanitize_header_field(default_organism) or "Bacteria sp."
+    header_count = 0
+    annotation_hits = 0
+
+    with input_faa.open("r", encoding="utf-8", errors="replace") as src, output_faa.open(
+        "w", encoding="utf-8"
+    ) as dst:
+        for line in src:
+            if line.startswith(">"):
+                header_count += 1
+                original_id = line[1:].strip().split()[0]
+                product = "hypothetical protein"
+                organism = default_organism
+                if original_id in annotations:
+                    annotated_product, annotated_organism = annotations[original_id]
+                    product = _sanitize_header_field(annotated_product) or product
+                    if annotated_organism:
+                        organism = _sanitize_header_field(annotated_organism) or organism
+                    annotation_hits += 1
+                ncbi_id = f"prot_{header_count:06d}"
+                dst.write(f">{ncbi_id} {product} [{organism}]\n")
+                continue
+            dst.write(line.strip().upper() + "\n")
+
+    return {
+        "input_headers": header_count,
+        "rewritten_headers": header_count,
+        "annotation_hits": annotation_hits,
+        "status": "rewritten",
+    }
 
 
 def run_carveme(proteins_faa: Path, model_xml: Path):

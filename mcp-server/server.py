@@ -55,8 +55,18 @@ def ping() -> dict[str, str]:
 
 
 @mcp.tool
-def run_prodigal(fna_file: str, output_dir: str = "data/output") -> dict[str, str]:
-    return run_prodigal_tool(fna_file=fna_file, output_dir=output_dir)
+def run_prodigal(
+    fna_file: str,
+    output_dir: str = "data/output",
+    annotation_tsv: str | None = None,
+    default_organism: str = "Bacteria sp.",
+) -> dict[str, str]:
+    return run_prodigal_tool(
+        fna_file=fna_file,
+        output_dir=output_dir,
+        annotation_tsv=annotation_tsv,
+        default_organism=default_organism,
+    )
 
 
 @mcp.tool
@@ -87,6 +97,8 @@ def run_refinegems_polish(
     email: str = "anonymous@example.com",
     id_db: str = "BIGG",
     protein_fasta: str | None = None,
+    protein_annotation_tsv: str | None = None,
+    default_organism: str = "Bacteria sp.",
     lab_strain: bool = False,
 ) -> dict[str, str]:
     """Polish a CarveMe/refineGEMs-compatible SBML model in a background job."""
@@ -96,6 +108,8 @@ def run_refinegems_polish(
         email=email,
         id_db=id_db,
         protein_fasta=protein_fasta,
+        protein_annotation_tsv=protein_annotation_tsv,
+        default_organism=default_organism,
         lab_strain=lab_strain,
     )
 
